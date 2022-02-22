@@ -1,0 +1,9 @@
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+server-->browser: Status Code 201 --> Created
+
+note over browser:
+JS prevent the data to be send
+then handles the adding to the list
+and redraws the notes
+and sends its own request to the server
+end note
