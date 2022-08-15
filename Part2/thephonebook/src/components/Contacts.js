@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Contacts = ({ contacts }) => {
+const Contacts = ({ contacts, onDeletePerson }) => {
     return (
         <div>
             {contacts.map((p, i) =>
@@ -11,6 +11,7 @@ const Contacts = ({ contacts }) => {
                     <span>
                         {p.number}
                     </span>
+                    <button onClick={() => { onDeletePerson(p.id) }}>delete</button>
                 </div>
             )}
         </div>
