@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import AddForm from './components/AddForm'
 import Contacts from './components/Contacts'
+import Message from './components/Message'
+import ErrorMessage from './components/ErrorMessage'
 import ContactsServices from './services/ContactsServices'
-import axios from 'axios'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
+  const [message, setMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     getAllPersons();
@@ -26,7 +29,10 @@ const App = () => {
     if (persons.find(p => p.name == newName)) {
       if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) updateNumber()
     } else if (persons.find(p => p.number == newNumber)) {
-      alert(`${newNumber} is already added to phonebook.`)
+      setErrorMessage(`${newNumber} is already added to phonebook`)
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 3000)
     } else {
       let newPerson = {
         name: newName,
@@ -36,6 +42,17 @@ const App = () => {
       ContactsServices.addPerson(newPerson)
         .then(person => {
           setPersons(persons.concat(person));
+          setMessage(`Added ${newName}`)
+          setTimeout(() => {
+            setMessage(null);
+          }, 3000)
+        })
+        .catch(error => {
+          setErrorMessage(`Addition of ${newName} was not successful`);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+          getAllPersons();
         })
     }
     setNewName('');
@@ -47,6 +64,17 @@ const App = () => {
     ContactsServices.updatePerson({ ...oldp, number: newNumber })
       .then((r) => {
         getAllPersons();
+        setMessage(`Updated ${oldp.name}'s number`)
+        setTimeout(() => {
+          setMessage(null);
+        }, 3000)
+      })
+      .catch(error => {
+        setErrorMessage(`Information of ${oldp.name} has already been removed from server`)
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 3000);
+        getAllPersons();
       })
   }
 
@@ -55,6 +83,17 @@ const App = () => {
     if (window.confirm(`Are you sure you want to delete ${name}`)) {
       ContactsServices.deletePerson(id)
         .then((r) => {
+          getAllPersons();
+          setMessage(`Deleted ${name}`)
+          setTimeout(() => {
+            setMessage(null);
+          }, 3000)
+        })
+        .catch(error => {
+          setErrorMessage(`Information of ${name} has already been removed from server`)
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000)
           getAllPersons();
         })
     }
@@ -76,6 +115,10 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Message message={message} />
+
+      <ErrorMessage error={errorMessage} />
 
       <Filter value={search} onChange={(event) => { setSearch(event.target.value) }} />
 
