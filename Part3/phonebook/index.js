@@ -1,9 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const morgan = require('morgan');
 const app = express();
 
 //#region Middlewares and others
+app.use(cors());
 app.use(express.json());
+app.use(express.static('build'));
 morgan.token('body', request => {
     return JSON.stringify(request.body);
 });
@@ -47,7 +50,7 @@ app.get('/info', (request, response) => {
     response.send(info_page)
 });
 const info_page = `
-<div>Phonebook has info for ${persons.length} people}</div>
+<div>Phonebook has info for ${persons.length} people</div>
 <div>${new Date().toUTCString()}</div>
 `
 
@@ -105,6 +108,6 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 //#endregion
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT);
 console.log(`Server is listening on port ${PORT}`);
