@@ -1,6 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const Person = require('./models/person')
+
 const app = express();
 
 //#region Middlewares and others
@@ -55,17 +58,15 @@ const info_page = `
 `
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons);
+    Person.find({}).then((people) => {
+        response.json(people);
+    })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const person = persons.find(p => p.id === id);
-    if (person) {
+    Person.findById(request.params.id).then((person) => {
         response.json(person);
-    } else {
-        response.status(404).end('Person not found');
-    }
+    })
 })
 //#endregion
 
@@ -76,27 +77,26 @@ app.post('/api/persons', (request, response) => {
     if (!body.name || !body.number) {
         return response.status(400)
             .json({ error: 'Both Name and number are required' });
-    } else if (checkIfExists(body.name)) {
-        return response.status(400)
-            .json({ error: 'Name already exists' });
     }
 
-    let newPerson = {
-        id: Math.floor(Math.random() * 100000),
+    const person = new Person({
         name: body.name,
         number: body.number
-    }
-
-    persons = persons.concat(newPerson);
-
-    response.json(newPerson);
+    })
+    
+    person.save().then((newPerson) => {
+        console.log(`added ${body.name} number ${body.number} to phonebook`)
+        response.json(newPerson);
+    })
 })
 
-const checkIfExists = (name) => {
-    let p = persons.find(p => p.name === name);
-    if (p) return true;
-    return false;
-}
+// currently not used
+// const checkIfExists = (name) => {
+//     return Person.find({ name: name }).then((person) => {
+//         if (person) return true;
+//         else return false;
+//     })
+// }
 //#endregion
 
 //#region DELETE requests
