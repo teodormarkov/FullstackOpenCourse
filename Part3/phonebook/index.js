@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('build'));
+
 morgan.token('body', request => {
     return JSON.stringify(request.body);
 });
@@ -50,12 +51,15 @@ app.get('/', (request, response) => {
 });
 
 app.get('/info', (request, response) => {
-    response.send(info_page)
+    Person.find({})
+        .then((people) => {
+            const info_page = `
+            <div>Phonebook has info for ${people.length} people</div>
+            <div>${new Date().toUTCString()}</div>
+            `
+            response.send(info_page)
+        });
 });
-const info_page = `
-<div>Phonebook has info for ${persons.length} people</div>
-<div>${new Date().toUTCString()}</div>
-`
 
 app.get('/api/persons', (request, response) => {
     Person.find({}).then((people) => {
@@ -63,10 +67,12 @@ app.get('/api/persons', (request, response) => {
     })
 })
 
-app.get('/api/persons/:id', (request, response) => {
-    Person.findById(request.params.id).then((person) => {
-        response.json(person);
-    })
+app.get('/api/persons/:id', (request, response, next) => {
+    Person.findById(request.params.id)
+        .then((person) => {
+            response.json(person);
+        })
+        .catch((error) => next(error));
 })
 //#endregion
 
@@ -83,30 +89,52 @@ app.post('/api/persons', (request, response) => {
         name: body.name,
         number: body.number
     })
-    
+
     person.save().then((newPerson) => {
         console.log(`added ${body.name} number ${body.number} to phonebook`)
         response.json(newPerson);
     })
 })
-
-// currently not used
-// const checkIfExists = (name) => {
-//     return Person.find({ name: name }).then((person) => {
-//         if (person) return true;
-//         else return false;
-//     })
-// }
 //#endregion
 
 //#region DELETE requests
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    persons = persons.filter(p => p.id !== id);
-
-    response.status(204).end(`Person with id ${id} was deleted if it existed`);
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndRemove(request.params.id)
+        .then((person) => {
+            response.status(204).end();
+        })
+        .catch((error) => next(error));
 })
 //#endregion
+
+//#region PUT requests
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body;
+
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+
+    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+        .then((person) => {
+            response.json(person);
+        })
+        .catch((error) => next(error));
+});
+//#endregion
+
+const errorHandler = (error, request, response, next) => {
+    console.log(error.message);
+
+    if (error.name == 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error);
+}
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT);
