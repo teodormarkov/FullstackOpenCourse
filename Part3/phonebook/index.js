@@ -77,7 +77,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 //#endregion
 
 //#region POST requests
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     let body = request.body;
 
     if (!body.name || !body.number) {
@@ -90,10 +90,12 @@ app.post('/api/persons', (request, response) => {
         number: body.number
     })
 
-    person.save().then((newPerson) => {
-        console.log(`added ${body.name} number ${body.number} to phonebook`)
-        response.json(newPerson);
-    })
+    person.save()
+        .then((newPerson) => {
+            console.log(`added ${body.name} number ${body.number} to phonebook`)
+            response.json(newPerson);
+        })
+        .catch((error) => next(error));
 })
 //#endregion
 
@@ -116,7 +118,7 @@ app.put('/api/persons/:id', (request, response, next) => {
         number: body.number
     }
 
-    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true })
         .then((person) => {
             response.json(person);
         })
@@ -125,10 +127,13 @@ app.put('/api/persons/:id', (request, response, next) => {
 //#endregion
 
 const errorHandler = (error, request, response, next) => {
-    console.log(error.message);
+    console.log(error);
 
     if (error.name == 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name == 'ValidationError') {
+        console.log(error.message);
+        return response.status(400).json({ er: error.message })
     }
 
     next(error);

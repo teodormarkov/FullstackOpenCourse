@@ -1,4 +1,4 @@
-import axios from 'axios';
+const axios = require('axios');
 
 const baseUrl = '/api/persons'
 
@@ -8,10 +8,8 @@ const getAll = () => {
 }
 
 const addPerson = (person) => {
-    var newperson = axios
-        .post(baseUrl, person)
-    return newperson.then(response =>
-        response.data)
+    return axios
+        .post(baseUrl, person);
 }
 
 const deletePerson = (id) => {
@@ -23,8 +21,7 @@ const deletePerson = (id) => {
 }
 
 const updatePerson = (person) => {
-    let update = axios.put(baseUrl + "/" + person.id, person)
-    return update.then(response => response.data);
+    return axios.put(baseUrl + "/" + person.id, person)
 }
 
 export default { getAll, addPerson, deletePerson, updatePerson }

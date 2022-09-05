@@ -13,8 +13,22 @@ mongoose.connect(url)
     })
 
 const schema = new mongoose.Schema({
-    name: String,
-    number: String
+    name: {
+        type: String,
+        required: true,
+        minLength: 3
+    },
+    number: {
+        type: String,
+        validate: {
+            validator: function (value) {
+                return /\d{2,3}-\d{1,}/.test(value);
+            },
+            message: 'Please enter a number with format (2 or 3 digits, \'-\', rest of the digits)'
+        },
+        minLength: [9, "8 digits minimum"],
+        required: [true, 'User phone number required'],
+    }
 });
 
 schema.set('toJSON', {

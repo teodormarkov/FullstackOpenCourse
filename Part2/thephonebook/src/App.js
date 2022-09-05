@@ -40,15 +40,28 @@ const App = () => {
         id: persons.length + 1
       }
       ContactsServices.addPerson(newPerson)
-        .then(person => {
-          setPersons(persons.concat(person));
+        .then(function (response) {
+          var data;
+          if (response == undefined) {
+            data = arguments[0];
+          } else {
+            data = response.data;
+          }
+          setPersons(persons.concat(data));
           setMessage(`Added ${newName}`)
           setTimeout(() => {
             setMessage(null);
           }, 3000)
         })
-        .catch(error => {
-          setErrorMessage(`Addition of ${newName} was not successful`);
+        .catch(function (e) {
+          if (e && e.response.data.er) {
+            setErrorMessage(e.response.data.er)
+          } else if (e && e.response.data.error) {
+            setErrorMessage(e.response.data.error)
+          }
+          else {
+            setErrorMessage(`Addition of ${newName} was not successful`);
+          }
           setTimeout(() => {
             setErrorMessage(null);
           }, 3000);
@@ -69,8 +82,14 @@ const App = () => {
           setMessage(null);
         }, 3000)
       })
-      .catch(error => {
-        setErrorMessage(`Information of ${oldp.name} has already been removed from server`)
+      .catch(function (e) {
+        if (e && e.status == 400) {
+          setErrorMessage(e.response.data.er)
+        } else if (arguments[0].response.data.er) {
+          setErrorMessage(arguments[0].response.data.er)
+        } else {
+          setErrorMessage(`Information of ${oldp.name} has already been removed from server`)
+        }
         setTimeout(() => {
           setErrorMessage(null);
         }, 3000);
